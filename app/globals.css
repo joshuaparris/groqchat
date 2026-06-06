@@ -11,7 +11,9 @@ html,
 body {
   min-height: 100%;
   margin: 0;
-  background: #060b17;
+  background: radial-gradient(circle at top, rgba(56,189,248,0.08), transparent 25%),
+    radial-gradient(circle at 20% 20%, rgba(148,163,184,0.08), transparent 18%),
+    #04080f;
   color: #e2e8f0;
 }
 
@@ -30,4 +32,26 @@ input {
 
 button {
   cursor: pointer;
+}
+
+.shadow-glow {
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.45);
+}
+
+.custom-scrollbar {
+  scrollbar-color: rgba(148, 163, 184, 0.45) rgba(15, 23, 42, 0.72);
+  scrollbar-width: thin;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 9999px;
 }
