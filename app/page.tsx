@@ -76,9 +76,26 @@ export default function HomePage() {
     draftRef.current.style.height = `${draftRef.current.scrollHeight}px`;
   }, [draft]);
 
+  const lastAssistantIndex = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === 'assistant') return i;
+    }
+    return -1;
+  }, [messages]);
+
   useEffect(() => {
     if (!transcriptRef.current) return;
-    transcriptRef.current.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' });
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) return;
+
+    if (lastMessage.role === 'assistant') {
+      const target = transcriptRef.current.querySelector<HTMLElement>('[data-last-assistant]');
+      if (target) {
+        target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
+    } else {
+      transcriptRef.current.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' });
+    }
   }, [messages]);
 
   const promptPreview = useMemo(() => {
@@ -230,7 +247,10 @@ export default function HomePage() {
                       key={index}
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} `}
                     >
-                      <div className={`max-w-[min(760px,100%)] rounded-[28px] border p-5 text-sm leading-7 shadow-sm ${
+                      <div
+                      data-role={message.role}
+                      data-last-assistant={message.role === 'assistant' && index === lastAssistantIndex ? 'true' : undefined}
+                      className={`max-w-[min(760px,100%)] rounded-[28px] border p-5 text-sm leading-7 shadow-sm ${
                         message.role === 'user'
                           ? 'border-slate-700 bg-slate-800/90 text-slate-100'
                           : 'border-slate-700/70 bg-slate-900/95 text-slate-100'
