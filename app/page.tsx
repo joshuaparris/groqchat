@@ -167,8 +167,8 @@ export default function HomePage() {
 
   return (
     <main className="h-screen overflow-hidden bg-slate-950 text-slate-100">
-      <div className="mx-auto flex h-full max-w-7xl flex-col gap-4 px-4 py-4">
-        <header className="shrink-0 flex flex-col gap-4 rounded-[32px] border border-slate-800 bg-slate-950/80 px-5 py-5 shadow-glow sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto flex h-full min-h-0 max-w-7xl flex-col gap-4 px-4 pb-3 pt-3">
+        <header className="shrink-0 flex flex-col gap-3 rounded-[28px] border border-slate-800 bg-slate-950/80 px-4 py-3 shadow-glow sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-[0.35em] text-emerald-300/80">Groq Dungeon Master</p>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">GROQCHAT — Dungeon Master Chat</h1>
@@ -192,9 +192,9 @@ export default function HomePage() {
           </div>
         </header>
 
-        <div className="flex h-full gap-6 xl:grid xl:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="flex h-full min-h-0 gap-6 xl:grid xl:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="hidden xl:block min-h-0">
-            <div className="sticky top-4 flex h-[calc(100vh-4.5rem)] min-h-0 flex-col overflow-hidden space-y-6 rounded-[32px] border border-slate-800 bg-slate-950/90 p-6 shadow-glow">
+            <div className="sticky top-4 flex h-full min-h-0 flex-col overflow-hidden space-y-6 rounded-[32px] border border-slate-800 bg-slate-950/90 p-5 shadow-glow">
               <div className="space-y-3">
                 <p className="text-sm uppercase tracking-[0.18em] text-slate-500">Settings</p>
                 <h2 className="text-xl font-semibold text-slate-100">Scene & Prompt</h2>
@@ -217,9 +217,9 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div ref={transcriptRef} className="flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-8 custom-scrollbar">
+            <div ref={transcriptRef} className="flex-1 min-h-0 overflow-y-auto px-6 py-4 sm:px-8 custom-scrollbar">
               {messages.length === 0 ? (
-                <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[28px] border border-dashed border-slate-800 bg-slate-950/70 p-8 text-center text-slate-400">
+                <div className="flex flex-col items-center justify-center rounded-[28px] border border-dashed border-slate-800 bg-slate-950/70 p-6 text-center text-slate-400">
                   <p className="text-lg font-medium text-slate-100">Start your investigation</p>
                   <p className="mt-3 max-w-xl text-sm leading-7">Begin by greeting Mira, looking around the inn, or asking about the missing courier.</p>
                 </div>
@@ -252,7 +252,7 @@ export default function HomePage() {
               </div>
             ) : null}
 
-            <div className="sticky bottom-0 z-10 border-t border-slate-800 bg-slate-950/95 px-6 py-5 backdrop-blur sm:px-8">
+            <div className="sticky bottom-0 z-10 border-t border-slate-800 bg-slate-950/95 px-6 py-4 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:px-8">
               <div className="mx-auto flex max-w-3xl flex-col gap-4">
                 <textarea
                   ref={draftRef}
