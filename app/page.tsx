@@ -79,6 +79,7 @@ export default function HomePage() {
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedSceneId, setSelectedSceneId] = useState('brindlehook');
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   function selectScene(sceneId: string) {
     const scene = PREDEFINED_SCENES.find(s => s.id === sceneId);
@@ -250,6 +251,14 @@ export default function HomePage() {
     URL.revokeObjectURL(url);
   }
 
+  function cancelRequest() {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+  }
+
   async function sendMessage() {
     const trimmed = draft.trim();
     if (!trimmed) return;
@@ -258,6 +267,9 @@ export default function HomePage() {
     setMessages(nextMessages);
     setDraft('');
     setLoading(true);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       const response = await fetch('/api/chat', {
@@ -269,19 +281,26 @@ export default function HomePage() {
           model,
           messages: nextMessages,
         }),
+        signal: controller.signal,
       });
 
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        setError('Groq could not respond just now. Your prompt and chat are still saved. Try again in a moment, or check the API keys in Vercel.');
+        setError('Groq could not respond right now. Your prompt and chat are still saved. Try again in a moment, or check the API keys in Vercel.');
         setErrorDetails(data.error || 'Unexpected response from Groq.');
       } else {
         setMessages((current) => [...current, { role: 'assistant', content: data.assistant }]);
       }
     } catch (fetchError) {
-      setError('Groq could not respond just now. Your prompt and chat are still saved. Try again in a moment, or check the API keys in Vercel.');
-      setErrorDetails(fetchError instanceof Error ? fetchError.message : String(fetchError));
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        setError('Request cancelled.');
+        setErrorDetails('The request was cancelled by the user.');
+      } else {
+        setError('Groq could not respond right now. Your prompt and chat are still saved. Try again in a moment, or check the API keys in Vercel.');
+        setErrorDetails(fetchError instanceof Error ? fetchError.message : String(fetchError));
+      }
     } finally {
+      abortControllerRef.current = null;
       setLoading(false);
     }
   }
@@ -511,15 +530,27 @@ export default function HomePage() {
                 />
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs text-slate-500">Shift+Enter for a new line. Enter to send.</p>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={sendMessage}
-                    className="inline-flex items-center justify-center rounded-3xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 focus:outline focus:outline-2 focus:outline-emerald-400 disabled:cursor-not-allowed disabled:bg-emerald-400/70"
-                    aria-label="Send message"
-                  >
-                    {loading ? 'Sending…' : 'Send'}
-                  </button>
+                  <div className="flex gap-2">
+                    {loading && (
+                      <button
+                        type="button"
+                        onClick={cancelRequest}
+                        className="inline-flex items-center justify-center rounded-3xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-800 focus:outline focus:outline-2 focus:outline-emerald-400"
+                        aria-label="Cancel request"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={sendMessage}
+                      className="inline-flex items-center justify-center rounded-3xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 focus:outline focus:outline-2 focus:outline-emerald-400 disabled:cursor-not-allowed disabled:bg-emerald-400/70"
+                      aria-label="Send message"
+                    >
+                      {loading ? 'Sending…' : 'Send'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
