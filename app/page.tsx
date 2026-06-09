@@ -7,9 +7,14 @@ type ChatMessage = {
   content: string;
 };
 
-const DEFAULT_SYSTEM_PROMPT = `You are a grounded, imaginative Dungeon Master. Respond like a helpful tabletop RPG DM. Keep the world consistent. Do not invent major lore unless it follows naturally from the scene. Do not introduce new named characters or locations that are not listed in the scene context. Stick strictly to the NPCs and details provided. Ask clarifying questions when needed. Treat ordinary player actions flexibly. Do not be a brittle command parser.`;
+const DEFAULT_SYSTEM_PROMPT = `You are a grounded, imaginative Dungeon Master. Respond like a helpful tabletop RPG DM. Keep the world consistent. Do not invent major lore unless it follows naturally from the scene context. Do not introduce new named characters or locations that are not listed in the scene context. Stick strictly to the NPCs and details provided. Ask clarifying questions when needed. Treat ordinary player actions flexibly. Do not be a brittle command parser.`;
 
-const DEFAULT_SCENE_CONTEXT = `Scene: The Last Lantern at Brindlehook Inn.
+const PREDEFINED_SCENES = [
+  {
+    id: 'brindlehook',
+    name: 'The Last Lantern Inn',
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    sceneContext: `Scene: The Last Lantern at Brindlehook Inn.
 Goal: Learn where the missing courier went.
 NPCs:
 - Mira, the innkeeper, guarded but not hostile.
@@ -18,7 +23,41 @@ Visible details:
 - Rain taps the windows.
 - Lantern light warms the common room.
 - The inn is worn but still functioning.
-- People seem tense about recent travellers.`;
+- People seem tense about recent travellers.`
+  },
+  {
+    id: 'crypt',
+    name: 'Whispering Crypt',
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    sceneContext: `Scene: The Whispering Crypt, an ancient burial site on the edge of town.
+Goal: Find the stolen relic of Saint Elara before the moon is full.
+NPCs:
+- Kael, a nervous grave robber hiding behind a sarcophagus.
+- A spectral guard that may or may not be hostile.
+Visible details:
+- Stone walls covered in moss and runes.
+- Flickering torchlight casts long shadows.
+- The air smells of dust and rain.
+- A faint chanting can be heard from deeper inside.`
+  },
+  {
+    id: 'smugglers',
+    name: 'Smuggler\'s Cove',
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    sceneContext: `Scene: Smuggler's Cove, a hidden beach with sea caves.
+Goal: Discover what cargo the smugglers are hiding.
+NPCs:
+- Rook, the smugglers' lookout, perched on a rock.
+- Several tough-looking sailors loading crates.
+Visible details:
+- Waves crash against the rocks.
+- A single lantern illuminates the cave entrance.
+- Seagulls circle overhead.
+- Footprints lead into a dark cave.`
+  }
+];
+
+const DEFAULT_SCENE_CONTEXT = PREDEFINED_SCENES[0].sceneContext;
 
 const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 
@@ -39,6 +78,19 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedSceneId, setSelectedSceneId] = useState('brindlehook');
+
+  function selectScene(sceneId: string) {
+    const scene = PREDEFINED_SCENES.find(s => s.id === sceneId);
+    if (!scene) return;
+    setSelectedSceneId(sceneId);
+    setSystemPrompt(scene.systemPrompt);
+    setSceneContext(scene.sceneContext);
+    setMessages([]);
+    setError(null);
+    setErrorDetails(null);
+    setSettingsOpen(false);
+  }
 
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const draftRef = useRef<HTMLTextAreaElement | null>(null);
@@ -243,6 +295,22 @@ export default function HomePage() {
   const settingsPanel = (
     <div className="space-y-6">
       <div className="space-y-3 rounded-3xl border border-slate-800 bg-slate-900/90 p-5">
+        <label className="text-sm font-semibold text-slate-200">
+          Quick Scene Select
+        </label>
+        <select
+          value={selectedSceneId}
+          onChange={(e) => selectScene(e.target.value)}
+          className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-4 text-sm text-slate-100 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-emerald-400/30"
+        >
+          {PREDEFINED_SCENES.map(scene => (
+            <option key={scene.id} value={scene.id}>
+              {scene.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="space-y-3 rounded-3xl border border-slate-800 bg-slate-900/90 p-5">
         <label htmlFor="systemPrompt" className="text-sm font-semibold text-slate-200">
           System Prompt
         </label>
@@ -312,13 +380,17 @@ export default function HomePage() {
             >
               Scene & Prompt
             </button>
-            <button
-              type="button"
-              onClick={newScene}
+            <select
+              value={selectedSceneId}
+              onChange={(e) => selectScene(e.target.value)}
               className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 focus:outline focus:outline-2 focus:outline-emerald-400"
             >
-              New Scene
-            </button>
+              {PREDEFINED_SCENES.map(scene => (
+                <option key={scene.id} value={scene.id}>
+                  {scene.name}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
               onClick={clearChat}
