@@ -462,6 +462,18 @@ export default function HomePage() {
                       </div>
                     </div>
                   ))}
+                  {loading && (
+                    <div className="flex justify-start">
+                      <div className="max-w-[min(760px,100%)] rounded-[28px] border border-slate-700/70 bg-slate-900/95 p-5 text-sm leading-7 shadow-sm">
+                        <p className="text-[0.75rem] uppercase tracking-[0.25em] text-slate-500">Dungeon Master</p>
+                        <div className="mt-3 flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                          <div className="h-2 w-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                          <div className="h-2 w-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
