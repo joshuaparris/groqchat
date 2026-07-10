@@ -23,6 +23,8 @@ export default defineConfig({
       GROQCHAT_MOCK_GROQ_RESPONSE: 'A safe family-friendly response.',
       GROQCHAT_GROQ_CALLED_FILE: 'test-results/groq-called.txt',
       GROQCHAT_MOCK_UNSAFE_TRIGGER: 'unsafe_output_probe',
+      GROQCHAT_MOCK_LLAMA_GUARD: 'safe',
+      GROQCHAT_MOCK_LLAMA_GUARD_UNSAFE_TRIGGER: 'llama_guard_unsafe_probe',
       GROQCHAT_MOCK_MODERATION_ERROR_TRIGGER: 'moderation_error_probe',
       GROQCHAT_MOCK_MODERATION_UNCLEAR_TRIGGER: 'moderation_unclear_probe',
       GROQCHAT_MOCK_SAFETY_EXCEPTION_TRIGGER: 'safety_exception_probe',

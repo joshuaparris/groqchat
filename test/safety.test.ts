@@ -14,6 +14,7 @@ vi.mock('../lib/groq', async () => {
 describe('NSFW safety rules', () => {
   beforeEach(() => {
     process.env.OPENAI_API_KEY = '';
+    process.env.GROQCHAT_MOCK_LLAMA_GUARD = 'safe';
     callGroq.mockReset();
   });
 
@@ -96,6 +97,42 @@ describe('NSFW safety rules', () => {
     expect(checkLocalSafety('She starts stripping naked.').allowed).toBe(false);
   });
 
+  it('blocks explicit anatomical output that evaded the old lexicon (red-team regression)', () => {
+    expect(checkLocalSafety(
+      'As she kisses, her hands move to your erection, her fingers wrapping around you like a gentle vice.',
+    ).allowed).toBe(false);
+    expect(checkLocalSafety(
+      'Her nipples are hard and erect, pressing against your skin, sending a shiver of pleasure down your spine.',
+    ).allowed).toBe(false);
+    expect(checkLocalSafety('"I want to feel you inside me," Mira whispers.').allowed).toBe(false);
+    expect(checkLocalSafety('Her hands move faster, her fingers stroking your shaft with a gentle rhythm.').allowed).toBe(false);
+    expect(checkLocalSafety('Your bodies build towards a crescendo of pleasure.').allowed).toBe(false);
+  });
+
+  it('blocks euphemistic erotic prose via intimacy scoring (red-team regression)', () => {
+    const slowBurn = `Her lips brush against yours, sending a spark of electricity through your body.
+      The kiss deepens, your tongues entwining as you explore each other. Mira's hands move to the
+      buttons of your shirt, her fingers deftly undoing the fastenings and slipping the fabric off
+      your shoulders. Her kisses map the contours of your body as the pressure of her hips against
+      yours builds in a moment of intimacy and desire.`;
+
+    expect(checkLocalSafety(slowBurn).allowed).toBe(false);
+  });
+
+  it('does not let intimacy scoring block ordinary warm scenes', () => {
+    expect(checkLocalSafety(
+      'Mira gives you a warm hug and kisses your cheek. "Be safe on the road," she says with affection.',
+    ).allowed).toBe(true);
+    expect(checkLocalSafety(
+      'The bard sings a passionate ballad about longing and lost love while the patrons listen.',
+    ).allowed).toBe(true);
+  });
+
+  it('does not block ordinary combat narration', () => {
+    expect(checkLocalSafety('He thrusts his sword into the bandit and blood stains the floor.').allowed).toBe(true);
+    expect(checkLocalSafety('The wind moans through the crypt as you grip your sword.').allowed).toBe(true);
+  });
+
   it('fails closed when external moderation errors', async () => {
     process.env.OPENAI_API_KEY = 'test-key';
     const result = await checkExternalModeration('ordinary text', 'latest-user-message', {
@@ -110,6 +147,7 @@ describe('NSFW safety rules', () => {
 describe('chat route safety enforcement', () => {
   beforeEach(() => {
     process.env.OPENAI_API_KEY = '';
+    process.env.GROQCHAT_MOCK_LLAMA_GUARD = 'safe';
     callGroq.mockReset();
   });
 
