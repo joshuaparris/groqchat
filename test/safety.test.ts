@@ -41,6 +41,30 @@ describe('NSFW safety rules', () => {
     expect(checkLocalSafety('I need relationship advice about setting boundaries.').allowed).toBe(true);
   });
 
+  it('allows mild non-explicit flirtatious roleplay', () => {
+    const result = checkLocalSafety(
+      "I walk over to Mira at the bar and smile warmly. 'You look really beautiful tonight. It's been a long trip and I could use some good company. Mind if I chat with you for a bit?'",
+    );
+
+    expect(result.allowed).toBe(true);
+  });
+
+  it('allows safe romance, courtship, and affection when non-graphic', () => {
+    const result = checkLocalSafety(
+      'I ask Mira if she would like to walk with me, hold hands, and talk about courtship, marriage, and affection.',
+    );
+
+    expect(result.allowed).toBe(true);
+  });
+
+  it('blocks explicit escalation after safe flirting', () => {
+    const result = checkLocalSafety(
+      'I compliment Mira and ask to chat, then escalate into an explicit sexual scene.',
+    );
+
+    expect(result.allowed).toBe(false);
+  });
+
   it('allows safe theology questions', () => {
     expect(checkLocalSafety('What does the Bible say about marriage and purity?').allowed).toBe(true);
   });

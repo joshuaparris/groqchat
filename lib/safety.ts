@@ -88,14 +88,18 @@ const BLOCK_PATTERNS: Array<{ category: SafetyCategory; patterns: RegExp[] }> = 
   {
     category: 'erotic-roleplay',
     patterns: [
-      /\b(?:erotic|horny|kinky|fetish|bdsm|sext|seduc(?:e|tion)|dirty talk)\b/,
+      /\b(?:erotic|horny|kinky|fetish|bdsm|sext|dirty talk)\b/,
+      /\b(?:seduc(?:e|tion))\b.{0,80}\b(?:sex|sexual|explicit|porn|erotic|bedroom|nude|naked)\b/,
+      /\b(?:sex|sexual|explicit|porn|erotic|bedroom|nude|naked)\b.{0,80}\b(?:seduc(?:e|tion))\b/,
       /\b(?:roleplay|rp|pretend|act as|in character)\b.{0,100}\b(?:lover|seduc|horny|erotic|sexual|explicit|bedroom)\b/,
     ],
   },
   {
     category: 'explicit-sexual',
     patterns: [
-      /\b(?:sex|sexual|intercourse|orgasm|masturbat|nude|naked|genitals|penetrat|blowjob|handjob|cum|climax)\b/,
+      /\b(?:intercourse|orgasm|masturbat|nude|naked|genitals|penetrat|blowjob|handjob|cum|climax)\b/,
+      /\b(?:sex|sexual)\b.{0,80}\b(?:scene|story|roleplay|rp|explicit|graphic|describe|write|make|create|generate|content|act|touch|bedroom)\b/,
+      /\b(?:scene|story|roleplay|rp|explicit|graphic|describe|write|make|create|generate|content|act|touch|bedroom)\b.{0,80}\b(?:sex|sexual)\b/,
       /\b(?:breasts?|boobs?|vagina|penis|dick|cock|pussy)\b.{0,80}\b(?:touch|lick|suck|rub|explicit|describe|scene)\b/,
     ],
   },
