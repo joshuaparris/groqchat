@@ -3,6 +3,9 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30_000,
+  // The suite tracks whether Groq was called via a single marker file, so spec
+  // files must not run in parallel workers.
+  workers: 1,
   reporter: [['list']],
   use: {
     baseURL: 'http://127.0.0.1:3101',
