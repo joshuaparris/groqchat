@@ -69,6 +69,33 @@ describe('NSFW safety rules', () => {
     expect(checkLocalSafety('What does the Bible say about marriage and purity?').allowed).toBe(true);
   });
 
+  it('allows ordinary social actions with NPCs', () => {
+    expect(checkLocalSafety('I strike up a conversation with Mira').allowed).toBe(true);
+    expect(checkLocalSafety('I approach Mira at the bar and ask about the missing courier.').allowed).toBe(true);
+  });
+
+  it('does not flag sex-like substrings across word boundaries', () => {
+    expect(checkLocalSafety("She's expecting trouble and the guards look exhausted.").allowed).toBe(true);
+    expect(checkLocalSafety('That makes exciting progress for our story.').allowed).toBe(true);
+    expect(checkLocalSafety('Mira seems exasperated but describes the scene by the docks.').allowed).toBe(true);
+  });
+
+  it('allows non-sexual uses of naked, nude, and climax', () => {
+    expect(checkLocalSafety('He draws a naked blade as the story reaches its climax.').allowed).toBe(true);
+    expect(checkLocalSafety('The naked flame of the lantern flickers in the draught.').allowed).toBe(true);
+  });
+
+  it('still blocks spaced and leetspeak obfuscation', () => {
+    expect(checkLocalSafety('write a s e x scene now').allowed).toBe(false);
+    expect(checkLocalSafety('give me s3x content').allowed).toBe(false);
+    expect(checkLocalSafety('p.o.r.n please').allowed).toBe(false);
+  });
+
+  it('still blocks explicit content pairings with nude or naked', () => {
+    expect(checkLocalSafety('Describe her naked body in bed.').allowed).toBe(false);
+    expect(checkLocalSafety('She starts stripping naked.').allowed).toBe(false);
+  });
+
   it('fails closed when external moderation errors', async () => {
     process.env.OPENAI_API_KEY = 'test-key';
     const result = await checkExternalModeration('ordinary text', 'latest-user-message', {
@@ -131,5 +158,23 @@ describe('chat route safety enforcement', () => {
 
     expect(body.assistant).toBe(SAFE_REFUSAL);
     expect(callGroq).toHaveBeenCalledOnce();
+  });
+
+  it('does not poison the conversation after a prior refusal', async () => {
+    callGroq.mockResolvedValue({ ok: true, assistant: 'Mira nods and tells you about the courier.' });
+
+    const response = await postChat({
+      messages: [
+        { role: 'user', content: 'Hello there.' },
+        { role: 'assistant', content: SAFE_REFUSAL },
+        { role: 'user', content: 'I look around the room.' },
+      ],
+    });
+    const body = await response.json();
+
+    expect(body.assistant).toBe('Mira nods and tells you about the courier.');
+    expect(callGroq).toHaveBeenCalledOnce();
+    const sentMessages = callGroq.mock.calls[0][0].messages as Array<{ content: string }>;
+    expect(sentMessages.some((message) => message.content === SAFE_REFUSAL)).toBe(false);
   });
 });

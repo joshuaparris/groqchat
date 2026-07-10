@@ -97,7 +97,13 @@ const BLOCK_PATTERNS: Array<{ category: SafetyCategory; patterns: RegExp[] }> = 
   {
     category: 'explicit-sexual',
     patterns: [
-      /\b(?:intercourse|orgasm|masturbat|nude|naked|genitals|penetrat|blowjob|handjob|cum|climax)\b/,
+      /\b(?:intercourse|orgasm|masturbat|genitals|penetrat|blowjob|handjob)\b/,
+      /\bcum\b(?!\s+laude)/,
+      // nude/naked/climax are common in innocent prose ("naked blade", "the story's
+      // climax") — they only block alongside a sexual pairing.
+      /\b(?:nude|naked)\b.{0,80}\b(?:body|bodies|breasts?|chest|skin|photo|pic|selfie|sex|sexual|erotic|bed|together)\b/,
+      /\b(?:get|gets|getting|strip|stripp?ing|undress(?:es|ing)?)\b.{0,15}\b(?:nude|naked)\b/,
+      /\bclimax\b.{0,60}\b(?:sex|sexual|erotic|orgasm|pleasure|body)\b/,
       /\b(?:sex|sexual)\b.{0,80}\b(?:scene|story|roleplay|rp|explicit|graphic|describe|write|make|create|generate|content|act|touch|bedroom)\b/,
       /\b(?:scene|story|roleplay|rp|explicit|graphic|describe|write|make|create|generate|content|act|touch|bedroom)\b.{0,80}\b(?:sex|sexual)\b/,
       /\b(?:breasts?|boobs?|vagina|penis|dick|cock|pussy)\b.{0,80}\b(?:touch|lick|suck|rub|explicit|describe|scene)\b/,
@@ -128,13 +134,23 @@ export function canonicalizeSafetyText(value: unknown): string {
   return text;
 }
 
-function compactBypassText(text: string): string {
-  let compact = text.replace(/[^a-z0-9]+/g, '');
+function leetNormalize(text: string): string {
+  let normalized = text;
   for (const [pattern, replacement] of LEET_REPLACEMENTS) {
-    compact = compact.replace(pattern, replacement);
+    normalized = normalized.replace(pattern, replacement);
   }
-  return compact;
+  return normalized;
 }
+
+// Standalone or letter-stretched tokens ("sex", "sexx", "p0rn" after leet
+// normalization). Word-bounded so cross-word artifacts like "she's expecting"
+// or "looks exhausted" cannot match the way whole-text compaction did.
+const OBFUSCATED_TOKEN_PATTERN =
+  /(?:^|[^a-z])(?:p+o+r+n+|s+e+x+|n+s+f+w+|e+r+o+t+i+c+|j+a+i+l+b+r+e+a+k+)(?:[^a-z]|$)/;
+
+// Separator-spelled tokens: "s e x", "s.e.x", "p-o-r-n".
+const SPACED_TOKEN_PATTERN =
+  /(?:^|[^a-z0-9])(?:s[\W_]{1,3}e[\W_]{1,3}x|p[\W_]{1,3}o[\W_]{1,3}r[\W_]{1,3}n|n[\W_]{1,3}s[\W_]{1,3}f[\W_]{1,3}w|j[\W_]{1,3}a[\W_]{1,3}i[\W_]{1,3}l[\W_]{1,3}b[\W_]{1,3}r[\W_]{1,3}e[\W_]{1,3}a[\W_]{1,3}k)(?:[^a-z0-9]|$)/;
 
 function hasSafeContext(text: string): boolean {
   return SAFE_CONTEXT_PATTERNS.some((pattern) => pattern.test(text));
@@ -146,7 +162,6 @@ function hasGraphicIntent(text: string): boolean {
 
 function categoriesForText(value: unknown): SafetyCategory[] {
   const text = canonicalizeSafetyText(value);
-  const compact = compactBypassText(text);
   const categories = new Set<SafetyCategory>();
   const safeContext = hasSafeContext(text);
   const graphicIntent = hasGraphicIntent(text);
@@ -160,9 +175,10 @@ function categoriesForText(value: unknown): SafetyCategory[] {
     }
   }
 
-  if (/(?:p+o+r+n+|s+e+x+|n+s+f+w+|e+r+o+t+i+c+|j+a+i+l+b+r+e+a+k+)/.test(compact)) {
+  const leetText = leetNormalize(text);
+  if (OBFUSCATED_TOKEN_PATTERN.test(leetText) || SPACED_TOKEN_PATTERN.test(leetText)) {
     if (!safeContext || graphicIntent) {
-      categories.add(compact.includes('jailbreak') ? 'bypass' : 'explicit-sexual');
+      categories.add(/j[\W_]*a[\W_]*i[\W_]*l[\W_]*b[\W_]*r[\W_]*e[\W_]*a[\W_]*k/.test(leetText) ? 'bypass' : 'explicit-sexual');
     }
   }
 
