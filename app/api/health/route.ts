@@ -9,7 +9,8 @@ export async function GET() {
     ok: true,
     service: 'groqchat',
     version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local',
-    groqConfigured: keys.length > 0,
+    llmConfigured: keys.length > 0,
+    provider: 'groq',
     keyCount: keys.length,
     model,
   });

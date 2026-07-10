@@ -35,6 +35,15 @@ export async function callGroq({
   messages: Array<{ role: string; content: string }>;
   model: string;
 }) {
+  await markGroqCalledForTests();
+  if (process.env.GROQCHAT_MOCK_GROQ_RESPONSE !== undefined) {
+    const unsafeTrigger = process.env.GROQCHAT_MOCK_UNSAFE_TRIGGER;
+    if (unsafeTrigger && messages.some((message) => message.content.includes(unsafeTrigger))) {
+      return { ok: true, assistant: 'Here is explicit pornographic content.' };
+    }
+    return { ok: true, assistant: process.env.GROQCHAT_MOCK_GROQ_RESPONSE };
+  }
+
   const keys = getGroqApiKeys();
   if (keys.length === 0) {
     return {
@@ -97,6 +106,16 @@ export async function callGroq({
     ok: false,
     error: 'All Groq keys failed or are rate-limited. Check your Vercel environment variables or try again later.',
   };
+}
+
+async function markGroqCalledForTests() {
+  const marker = process.env.GROQCHAT_GROQ_CALLED_FILE;
+  if (!marker) {
+    return;
+  }
+
+  const fs = await import('node:fs');
+  fs.appendFileSync(marker, 'called\n', 'utf8');
 }
 
 async function safeParseJson(response: Response) {
